@@ -163,6 +163,57 @@ Ext.define('CustomApp', {
 		return deferred.promise;
 	},
 
+	_querySet : function() {
+
+		var queryText = app.getSetting("queryText");
+
+		return ( !_.isUndefined(queryText) && !_.isNull(queryText) && queryText != '')
+
+	},
+
+	_queryFeatures : function(bundle) {
+		console.log("_queryFeatures");
+		
+		var deferred = new Deft.Deferred();
+		var queryText = app.getSetting("queryText");
+		console.log("QueryText",queryText,_.isNull(queryText));
+
+		if ( !app._querySet() ) {
+			deferred.resolve(bundle);
+		} else {
+			var filter = Ext.create('TSStringFilter',{query_string: queryText });
+			// var releaseFilter = Ext.create('Rally.data.wsapi.Filter', {
+			//      property: 'ReleseName',
+			//      operator: '=',
+			//      value: 'My Story'
+			// });
+
+			Ext.create('Rally.data.WsapiDataStore',{
+            model: _.first(bundle.piTypes).get("TypePath"),
+            autoLoad: true,
+            limit: 'Infinity',
+            filters: [filter,
+            	{ property : "Release.Name", operator : "=", value : bundle.release.Name }
+			],
+            fetch: ['ObjectID','FormattedID'],
+            listeners: {
+                scope: this,
+                load: function(store,items,successful,opts) {
+                    console.log("wsapi load",successful,opts);
+                    if ( successful ) {
+                    	console.log("query features",_.map(items,function(i){return i.get("FormattedID")}));
+                    	bundle.queryFeatureOids = _.map(items,function(i){return i.get("ObjectID")});
+                        deferred.resolve(bundle);
+                    } else {
+                        deferred.reject("Error loading filter");
+                    }
+                }
+            }
+        	});
+		}
+		return deferred.promise;
+	},
+
 	_getSnapshots : function(bundle) {
 		console.log("_getSnapshots")
 		var releases = bundle.releases;
@@ -172,8 +223,19 @@ Ext.define('CustomApp', {
 			
 			return objid === app.getContext().getProject().ObjectID ;
 		});
-		// console.log("parentRelease",parentRelease);
-		// console.log("release ids",_.map(releases,function(r){return r.get("ObjectID");}));
+
+		var find = {}
+		// if query text is used that will override find
+		if (app._querySet()) {
+			find = {
+				"ObjectID" : { "$in" : bundle.queryFeatureOids }
+			}
+		} else {
+			find = {
+				"Release" : { "$in" : _.map(releases,function(r){return r.get("ObjectID");})},
+				"_TypeHierarchy" : { "$in" : [_.first(bundle.piTypes).get("TypePath")] },
+			}
+		}
 
 		var deferred = new Deft.Deferred();
 		Ext.create('Rally.data.lookback.SnapshotStore', {
@@ -191,15 +253,11 @@ Ext.define('CustomApp', {
 				}
 			},
 			fetch: app.fetch,
-			find: {
-				// "Release" : Number(parentRelease.get("ObjectID")),
-				// "_ProjectHierarchy": app.getContext().getProject().ObjectID,
-				"Release" : { "$in" : _.map(releases,function(r){return r.get("ObjectID");})},
-				"_TypeHierarchy" : { "$in" : [_.first(bundle.piTypes).get("TypePath")] },
-				
-			}
-			// sort: { "_ValidFrom": 1 },
-			// pageSize : 10000
+			find : find
+			// find: {
+			// 	"Release" : { "$in" : _.map(releases,function(r){return r.get("ObjectID");})},
+			// 	"_TypeHierarchy" : { "$in" : [_.first(bundle.piTypes).get("TypePath")] },
+			// }
 		});
 		return deferred.getPromise();
 	},
@@ -369,6 +427,7 @@ Ext.define('CustomApp', {
 			chartData: bundle.chartData,
 			iterationIndices : bundle.iterationIndices,
 			baselineIndex : bundle.baselineIndex,
+			subtitle : app.getSetting('queryDescription'),
 			app : app,
 			listeners : {
 				// called when user clicks on a series in the chart
@@ -387,6 +446,7 @@ Ext.define('CustomApp', {
 	// _loadPreliminaryEstimateValues
 	// _loadReleses
 	// _loadIterations
+	// _queryFeatures
 	// readData
 	// getSnapshots
 	// process
@@ -406,6 +466,7 @@ Ext.define('CustomApp', {
     		this._loadPortfolioItemTypes,
     		this._loadReleases,
     		this._loadIterations,
+    		this._queryFeatures,
     		this._getSnapshots,
     		this._process,
     		this._setBaseline,
@@ -746,7 +807,27 @@ Ext.define('CustomApp', {
 				margin: '0 0 15 50',
 				labelStyle : "width:200px;",
 				afterLabelTpl: 'Choose <span style="color:#999999;"><i>Count</i> or <i>points</i></span>'
-			}
+			},
+			{
+                name: 'queryDescription',
+                xtype: 'rallytextfield',
+                boxLabelAlign: 'after',
+                fieldLabel: 'Query Label',
+                margin: '0 0 15 50',
+                labelStyle : "width:200px;",
+                afterLabelTpl: 'Description of query to show on chart.'
+            },
+			{
+                name: 'queryText',
+                xtype:'textareafield',
+            	grow: true,
+            	width : 250,
+                boxLabelAlign: 'after',
+                fieldLabel: 'Query',
+                margin: '0 0 15 50',
+                labelStyle : "width:200px;",
+                afterLabelTpl: 'Query to apply to the list of features.'
+            }
 
 		];
 	},

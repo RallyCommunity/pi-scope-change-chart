@@ -7,6 +7,7 @@
       "./lib/moment.min.js",
       "./lib/moment-range.js",
       "./lib/moment-timezone-with-data-2010-2020.min.js",
+      "_ts-string-filter.js",
       "pi-scope-change-chart.js",
       "App.js"
    ],

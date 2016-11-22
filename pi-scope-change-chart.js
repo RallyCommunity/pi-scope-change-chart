@@ -21,9 +21,9 @@ Ext.define('Rally.technicalservices.scopeChangeChart',{
         title: {
             text: 'Program Increment Scope Change Chart'
         },
-        subtitle: {
-            text: ''
-        },
+        // subtitle: {
+        //     text: ''
+        // },
         xAxis: {
             title: {
                 enabled : true,
@@ -202,7 +202,7 @@ Ext.define('Rally.technicalservices.scopeChangeChart',{
 
     constructor: function (config) {
 
-        this.callParent(arguments);
+        // this.callParent(arguments);
 
         scope_change_chart = this;
 
@@ -210,6 +210,10 @@ Ext.define('Rally.technicalservices.scopeChangeChart',{
 
         // console.log(config);
         
+        if (config.subtitle) {
+            console.log("subtitle",config.subtitle);
+            this.chartConfig.subtitle = { text : config.subtitle } ;
+        }
         if (config.title){
             this.chartConfig.title = config.title;
         }
@@ -226,15 +230,7 @@ Ext.define('Rally.technicalservices.scopeChangeChart',{
                 value : config.baselineIndex
 
         });
-        // this.chartConfig.yAxis.plotLines = [];
-        // this.chartConfig.yAxis.plotLines.push({
-        //     color: '#FF0000',
-        //     width: 1,
-        //     value: 0,
-        //     zIndex : 4,
-        //     label : {text:"-"}
-        // });
+        this.callParent(arguments);
 
-        // this.chartConfig.app = config.app;
     }
 });
