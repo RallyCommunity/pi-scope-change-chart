@@ -217,6 +217,10 @@ Ext.define('CustomApp', {
 	_getSnapshots : function(bundle) {
 		console.log("_getSnapshots")
 		var releases = bundle.releases;
+		var piType = _.find(bundle.piTypes, function(pit){
+			return pit.get("Ordinal") == 0;
+		})
+		var piTypeString = piType.get("TypePath");
 
 		var parentRelease = _.find(releases,function(r){
 			var objid = Number(_.last(r.get("Project")._ref.split("/")));	
@@ -233,7 +237,7 @@ Ext.define('CustomApp', {
 		} else {
 			find = {
 				"Release" : { "$in" : _.map(releases,function(r){return r.get("ObjectID");})},
-				"_TypeHierarchy" : { "$in" : [_.first(bundle.piTypes).get("TypePath")] },
+				"_TypeHierarchy" : { "$in" : [piTypeString] },
 			}
 		}
 
