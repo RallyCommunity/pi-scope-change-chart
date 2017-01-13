@@ -171,6 +171,13 @@ Ext.define('CustomApp', {
 
 	},
 
+	_getFeatureString : function() {
+		var piType = _.find(app.bundle.piTypes, function(pit){
+			return pit.get("Ordinal") == 0;
+		})
+		return piType.get("TypePath");
+	},
+
 	_queryFeatures : function(bundle) {
 		console.log("_queryFeatures");
 		
@@ -189,7 +196,8 @@ Ext.define('CustomApp', {
 			// });
 
 			Ext.create('Rally.data.WsapiDataStore',{
-            model: _.first(bundle.piTypes).get("TypePath"),
+            // model: _.first(bundle.piTypes).get("TypePath"),
+            model: app._getFeatureString(),
             autoLoad: true,
             limit: 'Infinity',
             filters: [filter,
@@ -217,10 +225,6 @@ Ext.define('CustomApp', {
 	_getSnapshots : function(bundle) {
 		console.log("_getSnapshots")
 		var releases = bundle.releases;
-		var piType = _.find(bundle.piTypes, function(pit){
-			return pit.get("Ordinal") == 0;
-		})
-		var piTypeString = piType.get("TypePath");
 
 		var parentRelease = _.find(releases,function(r){
 			var objid = Number(_.last(r.get("Project")._ref.split("/")));	
@@ -237,7 +241,7 @@ Ext.define('CustomApp', {
 		} else {
 			find = {
 				"Release" : { "$in" : _.map(releases,function(r){return r.get("ObjectID");})},
-				"_TypeHierarchy" : { "$in" : [piTypeString] },
+				"_TypeHierarchy" : { "$in" : [app._getFeatureString()] },
 			}
 		}
 
@@ -667,7 +671,7 @@ Ext.define('CustomApp', {
 
 		Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
 			// models: ['PortfolioItem/Feature'],
-			models: [_.first(app.bundle.piTypes).get("TypePath")],
+			models: [app._getFeatureString()],
 			filters : [filter],
 			autoLoad: true,
 			enableHierarchy: true,
