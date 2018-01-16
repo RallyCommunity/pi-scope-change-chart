@@ -151,10 +151,7 @@ Ext.define('CustomApp', {
     					return i.get("EndDate");
 					});
 
-					if (records.length>0)
-						deferred.resolve(bundle);
-					else
-						deferred.reject("No iterations found");
+					deferred.resolve(bundle);
 				},
 				failure : function(e) {
 					deferred.reject(e);
@@ -257,6 +254,9 @@ Ext.define('CustomApp', {
 					}
 					bundle.snapshots = snapshots;
 					console.log("snapshots:",snapshots.length);
+					
+					// localStorage.setItem('testObject', JSON.stringify(snapshots));
+
 					deferred.resolve(bundle);
 				}
 			},
@@ -516,6 +516,9 @@ Ext.define('CustomApp', {
 	// The baseline date is based on the selected configuration
 	getBaselineIndex : function(range,iterations) {
 
+		if (iterations.length==0) {
+			return 0;
+		}
 		if (app.getSetting("baselineType") ==='End of first Day') {
 			return 0;
 		}
