@@ -618,6 +618,12 @@ Ext.define('CustomApp', {
 		};
 
 		// sum of story points for the features
+		var storyCountReducer = function(features) {
+			return _.reduce(features,function(memo,feature) { 
+				return memo + (feature.LeafStoryCount ? feature.LeafStoryCount : 0); }, 0 );
+		};
+
+		// sum of story points for the features
 		var pointsReducer = function(features) {
 			return _.reduce(features,function(memo,feature) { 
 				return memo + feature.LeafStoryPlanEstimateTotal; }, 0 );
@@ -636,6 +642,7 @@ Ext.define('CustomApp', {
 		switch( that.getSetting('aggregateType') ) {
 			case 'Points': reducerFn = pointsReducer; break;
 			case 'Count': reducerFn = countReducer; break;
+			case 'Story Count': reducerFn = storyCountReducer; break;
 			case 'Preliminary Estimate': reducerFn = estimateReducer; break;
 		}
 
@@ -782,7 +789,7 @@ Ext.define('CustomApp', {
 
 		var aggregateStore = new Ext.data.ArrayStore({
 			fields: ['aggregate'],
-			data : [['Count'],['Points'],['Preliminary Estimate']]
+			data : [['Count'],['Points'],['Story Count'],['Preliminary Estimate']]
 		});  
 
 		var baselineTypeStore = new Ext.data.ArrayStore({
